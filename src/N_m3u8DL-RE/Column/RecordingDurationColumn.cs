@@ -21,10 +21,29 @@ internal class RecordingDurationColumn : ProgressColumn
         _recodingDurDic = recodingDurDic;
         _refreshedDurDic = refreshedDurDic;
     }
-    public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
+  public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
+{
+    // Безопасно получаем основную длительность (в секундах)
+    if (!_recodingDurDic.TryGetValue(task.Id, out var dur))
     {
-        if (_refreshedDurDic == null)
-            return new Text($"{GlobalUtil.FormatTime(_recodingDurDic[task.Id])}", MyStyle).LeftJustified();
-        return new Text($"{GlobalUtil.FormatTime(_recodingDurDic[task.Id])}/{GlobalUtil.FormatTime(_refreshedDurDic[task.Id])}", GreyStyle);
+        dur = 0; // если ключа нет — 0 секунд
     }
+
+    if (_refreshedDurDic == null)
+    {
+        return new Text($"{GlobalUtil.FormatTime(dur)}", MyStyle)
+            .LeftJustified();
+    }
+
+    // Безопасно получаем обновлённую длительность
+    if (!_refreshedDurDic.TryGetValue(task.Id, out var refDur))
+    {
+        refDur = 0; // если ключа нет — 0 секунд
+    }
+
+    return new Text(
+        $"{GlobalUtil.FormatTime(dur)}/{GlobalUtil.FormatTime(refDur)}",
+        GreyStyle
+    );
+}
 }
